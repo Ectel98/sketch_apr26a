@@ -5,6 +5,7 @@
 #include <BLEServer.h>
 #include <BLEUtils.h>
 #include <BLE2902.h>
+#include <BleKeyboard.h>
 
 BLEServer *pServer = NULL;
 BLECharacteristic * pTxCharacteristic;
@@ -63,8 +64,12 @@ void setup_ble() {
 }
 
 
-void start_adversiting() {
+void start_advertising() {
   pServer->startAdvertising(); 
+}
+
+void stop_advertising() {
+  pServer->getAdvertising()->stop(); 
 }
 
 
@@ -80,4 +85,11 @@ void send_message_to_app(String message) {
     
     pTxCharacteristic->setValue(value);
     pTxCharacteristic->notify();
+}
+
+void start_ble() {
+  btStart();
+}
+void stop_ble() {
+  btStop();
 }

@@ -4,6 +4,7 @@
 #include "esp_timer.h"
 #include "my_leds.h"
 #include "battery_control.h"
+#include "esp32-hal-cpu.h"
 
 #include <math.h>
 
@@ -44,16 +45,9 @@ void IRAM_ATTR Timer() { //Campionamento
 }
 
 
-void IRAM_ATTR Timer2() { //Campionamento
-  start_adversiting();
-}
-
-
 esp_timer_handle_t timer;
-esp_timer_handle_t timer2; //Inizilizzazione timer
 
 const esp_timer_create_args_t timerParameters = { .callback = reinterpret_cast<esp_timer_cb_t>(&Timer) };
-const esp_timer_create_args_t timerParameters2 = { .callback = reinterpret_cast<esp_timer_cb_t>(&Timer2) }; 
 
 led led_ble;
 led led_error;
@@ -71,11 +65,12 @@ void setup() {
   pinMode(pin_enable_ecg_sensor,OUTPUT);
 
   esp_timer_create(&timerParameters, &timer);   //Creazione timer 
-  esp_timer_create(&timerParameters2, &timer2);
   
   setup_leds();
   setup_ble();
   setup_battery_sensors();
+
+  setCpuFrequencyMhz(80);
   
   Serial.begin(115200);
 
@@ -91,21 +86,19 @@ void loop() {
 
 
   if (status_connection) {         //se sono connesso al telefono
-    esp_timer_stop(timer2);        //spengo il timer del ble
     start_timer_flag = false;
   }
+  
   else {
     led_ble.set_led(500,500,1);
     state_monitoring == "ended";
     end_monitoring();
   }
   
-  if (start_timer_flag == false && !status_connection) {              //se sono disconesso e il timer del ble è spento
-      esp_timer_start_periodic(timer2, 1000000);     // accendo il tiemr del ble
+  if (start_timer_flag == false && !status_connection) { //se sono disconesso e il timer del ble è spento
+      start_advertising();
       start_timer_flag = true;
   }
-
-
   
 
   if (message_recived) {         //Se ho ricevuto un messaggio
@@ -318,7 +311,6 @@ void monitoring() {
   if (rr_intervall>0) {
     send_message_to_app(String(rr_intervall)); //valurare se inviare ad ogni messaggio o no
   }
- 
 }
 
 void real_time() {
@@ -342,7 +334,6 @@ void message_ble() { //Gestisce i messaggi ricevuti dall'App
       state_monitoring="started";
       send_message_to_app("started");
     }
-    //led
   }
 
   else if (recived_value == "end_monitoring") {
@@ -350,7 +341,6 @@ void message_ble() { //Gestisce i messaggi ricevuti dall'App
     end_monitoring();
     first_time = true;
     send_message_to_app("ended");
-    //led
   }
 
   else if (recived_value == "stato") {
@@ -360,14 +350,12 @@ void message_ble() { //Gestisce i messaggi ricevuti dall'App
   else if (recived_value == "real_time_start") {
     state_real_time="started";
     send_message_to_app(state_real_time);
-    //led
   }
 
   else if (recived_value == "real_time_end") {
     state_monitoring="ended";
     esp_timer_stop(timer);
     send_message_to_app(state_real_time);
-    //led
   }
   
 }

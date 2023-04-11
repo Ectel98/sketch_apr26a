@@ -14,6 +14,12 @@ extern String recived_value;
 
 void setup_ble();
 
-void start_adversiting();
+void start_advertising();
+
+void stop_advertising();
 
 void send_message_to_app(String);
+
+void stop_ble();
+
+void start_ble();
