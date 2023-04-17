@@ -39,11 +39,10 @@ bool start_timer_flag = false; //Serve ad avviare il timer una volta sola se son
 String state_monitoring = "ended";
 String state_real_time = "ended";
 
-void IRAM_ATTR Timer() { //Campionamento
+void IRAM_ATTR Timer() {  //Campionamento
   ecg_signal=analogRead(pin_ecg_signal);
   sensor_flag = true;
 }
-
 
 esp_timer_handle_t timer;
 
@@ -90,7 +89,7 @@ void loop() {
   }
   
   else {
-    led_ble.set_led(500,500,1);
+    led_ble.set_led(500,500,1);   //Imposto il lampeggio del led
     state_monitoring == "ended";
     end_monitoring();
   }
@@ -110,7 +109,7 @@ void loop() {
   
  
   if (state_monitoring=="started") {
-    if (control()) {
+    if (control()) {                                //Verifico le condizioni della batteria
       if (first_time) {                             //Se non ho ancora avviato il timer
         esp_timer_start_periodic(timer, 2000);      //Avvio timer
         first_time = false;
@@ -141,8 +140,7 @@ void end_monitoring() {
 
 bool control() {
   
-  //!digitalRead(pin_lead_n) && !digitalRead(pin_lead_p) &&
-  if (temp_sensor.temperature() && supply_sensor.test_supply()) { // Se gli elettrodi sono collegati, la temepratura e la carica della batteria sono adeguate 
+  if (temp_sensor.temperature() && supply_sensor.test_supply()) { // Se la temepratura e la carica della batteria sono adeguate 
       return 1;
   }
   
@@ -174,7 +172,7 @@ int rr_extraction() {
 
   double high_pass_result;
   double low_pass_result;
-  double derivetion_result;     
+  double derivation_result;     
   double squaring_result;       
   double mowing_windows_result; 
 
@@ -191,13 +189,13 @@ int rr_extraction() {
     return -1;
   }
 
-  derivetion_result = (low_pass_result-der_vector[0])/5;
+  derivation_result = (der_vector[0] + 2*der_vector[1] - 2*low_pass_result - der_vector[4])/8;   // Filtro derivatore
 
   for(int e = 0;e<3;e++)                                                 
     der_vector[e]=der_vector[e+1];                                     
-  der_vector[3]=derivetion_result;  
+  der_vector[3]=low_pass_result;  
 
-  squaring_result = sq(low_pass_result);       // Squadratura del segnale  
+  squaring_result = sq(derivation_result);       // Squadratura del segnale  
 
   mowing_windows_result = mowing_windows_average_filter(squaring_result); // Filtro a media mobile
  
@@ -309,7 +307,7 @@ void monitoring() {
   rr_intervall = rr_extraction();
 
   if (rr_intervall>0) {
-    send_message_to_app(String(rr_intervall)); //valurare se inviare ad ogni messaggio o no
+    send_message_to_app(String(rr_intervall)); //Invio l'intervallo R-R allo smartphone
   }
 }
 

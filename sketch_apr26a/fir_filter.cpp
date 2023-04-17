@@ -2,7 +2,7 @@
 
 
 
-double fir_filter_r(double in,double *coef,int n,double *history) { //funzione non mia vedere bibliografia
+double fir_filter_r(double in,double *coef,int n,double *history) { //Paul Embree - C Algorithms for Real-Time DSP 
 
   double *hist_ptr,*hist1_ptr,*coef_ptr;
   double out;

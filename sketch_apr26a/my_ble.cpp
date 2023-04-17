@@ -5,7 +5,6 @@
 #include <BLEServer.h>
 #include <BLEUtils.h>
 #include <BLE2902.h>
-#include <BleKeyboard.h>
 
 BLEServer *pServer = NULL;
 BLECharacteristic * pTxCharacteristic;
