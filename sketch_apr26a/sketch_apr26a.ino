@@ -14,6 +14,7 @@
 #define pin_lead_n 34
 #define pin_enable_ecg_sensor 32
 
+static double der_vector[4];
 
 int peak_detecntion(double);
 int rr_extraction();
@@ -176,7 +177,6 @@ int rr_extraction() {
   double squaring_result;       
   double mowing_windows_result; 
 
-  static double der_vector[4];
   static int derivetion_counter = 0;
 
   high_pass_result = high_pass_filter(ecg_signal);  // Filtraggio passa altro del segnale
@@ -195,9 +195,11 @@ int rr_extraction() {
     der_vector[e]=der_vector[e+1];                                     
   der_vector[3]=low_pass_result;  
 
-  squaring_result = sq(derivation_result);       // Squadratura del segnale  
+  squaring_result = sq(low_pass_result);       // Squadratura del segnale  
 
   mowing_windows_result = mowing_windows_average_filter(squaring_result); // Filtro a media mobile
+
+  Serial.println(mowing_windows_result);
  
   return peak_detection(mowing_windows_result);
   
